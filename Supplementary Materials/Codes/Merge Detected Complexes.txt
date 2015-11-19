@@ -1,0 +1,35 @@
+#E.M. Hanna
+from optparse import OptionParser
+from collections import defaultdict
+from math import *
+import string
+from numpy import *
+import numpy as num
+import numpy.matlib as M
+from numpy.matlib import rand,zeros,ones,empty,eye
+import os
+import glob
+import subprocess
+import sys
+from os import rename
+import shutil
+import re
+
+#>>>Specify DIRECTORY
+os.chdir("DIRECTORY")
+
+files = glob.glob("Predicted_Complexes_Cluster*.txt")
+
+with open(".../Predicted_all.txt",'w') as outfile: 
+   for f in files:
+       splt1 = f.split("Cluster")
+       splt2 = splt1[1].split(".")
+       
+       num = int(splt2[0])
+
+       if num < 100:
+           with open(f,'r') as infile:
+               outfile.write(infile.read())
+               
+   
+         

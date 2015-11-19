@@ -1,0 +1,39 @@
+from optparse import OptionParser
+from collections import defaultdict
+#E.M. Hanna
+from math import *
+import string
+from numpy import *
+import numpy as num
+import numpy.matlib as M
+from numpy.matlib import rand,zeros,ones,empty,eye
+import os
+import glob
+import subprocess
+import sys
+from os import rename
+import shutil
+import re
+
+
+os.chdir("DIRECTORY")
+
+from subprocess import Popen, PIPE    
+
+ppifiles = glob.glob("filtered_Cluster*_PPI.txt")
+ 
+for ppifile in ppifiles:
+         
+    sp1 = ppifile.split("Cluster")
+    sp2 = sp1[1].split("_")
+    strng = sp2[0]
+    print strng
+    intgr = int(strng)
+###########################################    
+    if intgr < 75:
+        strng1 = "python PEWCC_EMH.py -f filtered_Cluster"+strng+"_PPI.txt -r 0.1\r\n"
+        
+        proc = subprocess.Popen(["cmd.exe"], stdin=PIPE, stdout=PIPE)
+        proc.stdin.write(strng1)
+        proc.stdin.write("exit\r\n")
+        proc.wait()

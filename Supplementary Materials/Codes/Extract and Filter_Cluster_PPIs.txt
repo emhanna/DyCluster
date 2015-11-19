@@ -1,0 +1,109 @@
+#E.M. Hanna
+from optparse import OptionParser
+from collections import defaultdict
+from math import *
+import string
+from numpy import *
+import numpy as num
+import numpy.matlib as M
+from numpy.matlib import rand,zeros,ones,empty,eye
+import os
+import glob
+import subprocess
+import sys
+from os import rename
+import shutil
+import re
+
+#>>>>PhaseI: Given biclustering output, extract the PPIs corresponding to each cluster
+
+#>>>Specify DIRECTORY
+
+os.chdir("DIRECTORY")  
+         
+def create_ListOfClusters(in_file,out_file):
+    with open(in_file,'r') as infile:
+        with open(out_file,'w') as outfile:
+            count = 2
+            for line in infile:
+                if count % 3==0:
+                    #print "count = ",count;
+                    outfile.writelines(line)
+                count+=1
+    with open(out_file,'r') as list_file:
+        ListofClusters = [line.strip() for line in list_file]
+    #print ListofClusters
+    length = len(ListofClusters)
+    #print "len = ",length;
+    return ListofClusters
+
+#>>>Specify Biclusters File (BicAT output)
+                
+ListOfClusters = create_ListOfClusters("Biclusters File (BicAT output)","Clusters.txt")
+
+
+os.mkdir("Clusters_PPI") #Create directory "Clusters_PPI" to store Cluster*_PPI
+
+for clstr in ListOfClusters:
+    counter = 0
+    elt = clstr.split()
+    clstr_index = ListOfClusters.index(clstr) + 1
+    print clstr_index
+    filename = "Cluster"+str(clstr_index)+"_PPI.txt"
+    
+#>>> Specify inintial PPI FILE
+    with open("PPI FILE",'r') as infile:
+        with open(os.path.join("Clusters_PPI",filename),'w') as outfile:
+            for line in infile:
+                counter = counter + 1
+                for p in elt:
+                        if p in line:
+                            outfile.writelines(line)
+                            break
+        print counter
+        outfile.close()
+
+#>>>>filter generated PPI files<<<<<<<<<<<<
+#>>>Specify DIRECTORY
+os.chdir(".../Clusters_PPI")
+
+files = glob.glob("Cluster*_PPI.txt")
+for f in files:
+    name = re.split("r|_",f)
+    strfileno = name[1]
+#>>>Specify DIRECTORY
+    with open(".../Clusters_PPI/filtered_Cluster"+strfileno+"_PPI.txt", 'w') as outfile:
+        with open(".../Clusters_PPI/Cluster"+strfileno+"_PPI.txt", 'r') as infile:
+            interactions = set(infile.readlines())
+            uni = set()
+            for l in interactions:
+                ptns = l.split()
+                p1 = ptns[0]
+                p2 = ptns[1]
+                rel = str(ptns[1]+"\t"+ptns[0]+"\n")
+                #print rel
+                if rel not in uni:
+                    uni.add(l)
+                
+            for item in uni:
+                outfile.writelines(item)
+
+#>>>>Phase III: Merge Cluster_PPI files into one PPI file 
+#>>>Specify DIRECTORY
+os.chdir(".../Clusters_PPI")
+files = glob.glob("filtered_Cluster*_PPI.txt")
+#>>>Specify DIRECTORY
+with open(".../Clusters_PPI/PPI_all.txt",'w') as outfile: 
+   for f in files:
+       name = re.split("Cluster|_P",f)
+       num = int(name[1])
+#################################################
+       if num < 100:
+           with open(f,'r') as infile:
+               outfile.write(infile.read())
+               
+#>>Filter PPI_all for duplicates
+#>>>Specify DIRECTORY
+uniqlines = set(open(".../Clusters_PPI/PPI_all.txt").readlines())
+with open("..../Clusters_PPI/filtered_PPI_all.txt", 'w') as outfile:
+    outfile.writelines(set(uniqlines))

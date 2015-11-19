@@ -1,0 +1,172 @@
+from optparse import OptionParser
+from collections import defaultdict
+from math import *
+import string
+from numpy import *
+import numpy as num
+import numpy.matlib as M
+from numpy.matlib import rand,zeros,ones,empty,eye
+import os
+import glob
+import subprocess
+import sys
+from os import rename
+import shutil
+import re
+
+merge_threshold = 0.75
+filter_threshold = 0.5
+
+#>>> Specify DIRECTORY
+
+os.chdir("DIRECTORY")
+
+def MergeDetectedCmplxs(in_file):
+    with open(in_file,'r') as infile:
+        numlines = sum(1 for line in infile)
+        cmplxs = [list()]*numlines
+        copy_cmplxs = [list()]*numlines
+        
+    with open(in_file,'r') as infile:
+        i = 0
+        for line in infile:
+            cmplx = re.split(":  | |\n",line)
+            del(cmplx[0])
+            
+            cmplxs[i] = cmplx
+            i = i+1
+        for comp in cmplxs:
+            del comp[len(comp)-1]
+        
+                
+        j = 0
+        for elt in cmplxs:
+            copy_cmplxs[j] = elt
+            j= j + 1
+      
+        
+        
+            
+        match = Compare(cmplxs,copy_cmplxs)
+        
+        while match and len(match) > 0: 
+             
+             
+            ind1 = match[len(match)-1]
+            
+        
+            ind2 = match[len(match)-2]
+            
+            
+        
+            merged = list()
+        
+            for ind in range(0,len(match)-2):
+                merged.append(match[ind])
+            
+                
+            
+           
+            cmplxs.remove(cmplxs[ind1])
+          
+            cmplxs.remove(cmplxs[ind2])
+            
+            
+            cmplxs.append(merged)
+            
+            
+            copy_cmplxs.pop()
+            
+            x = 0
+            for elt in cmplxs:
+                copy_cmplxs[x] = elt
+                x= x + 1
+            
+            match = Compare(cmplxs,copy_cmplxs)
+            
+        with open("merged_predicted_all.txt",'w') as outfile: ####output file
+            for l in range(0,len(cmplxs)):
+                str1 = "C"+str(l+1)+": "
+                
+                str2 = str()
+                for ptn in cmplxs[l]:
+                    str_ptn = str(ptn).strip('\n')
+                    str2 = str2+" "+str_ptn
+                
+                string = str1+str2+"\n"
+                outfile.writelines(string)
+                
+                         
+                        
+def Compare(l1,l2):  
+   
+    res = ()
+    
+    for c1 in l1:
+           
+            for c2 in l2:    
+                
+                if l1.index(c1) != l2.index(c2):
+                
+                    inter = set(c1) & set(c2)
+                    smaller = set(c1)
+                    if len(c2) < len(c1):
+                        smaller = set(c2)
+                        
+                    if len(inter) >= merge_threshold * len(smaller):
+                        
+                        res = list(inter)
+                        for e in c1:
+                            if e not in inter:
+                                res.append(e)
+                        for f in c2:
+                            if f not in inter:
+                                res.append(f)
+                        res.append(l1.index(c1))
+                        res.append(l2.index(c2))
+                        
+                     
+                        copy_res = []
+                        for x in range(0,len(res)-2):
+                            copy_res.append(res[x])
+                        
+                        degrees = []
+                        for r in copy_res:
+                            st = r.split('\n')
+                            l = (st[0],0)
+                            degrees.append(l)
+                            
+                                                
+                        with open("PPI.txt",'r') as infile:
+                            for line in infile:
+                                mem = line.split()
+                                if mem[0] in copy_res and mem[1] in copy_res:
+                                    
+                                    for k in degrees:
+                                        if k[0] == mem[0] or k[0] == mem[1]:
+                                            
+                                            degrees[degrees.index(k)] = (k[0],k[1]+1)
+                                        
+                        
+                        filtered = list()
+                        
+                        
+                        var = (len(res)-2) * filter_threshold
+                       
+                        
+                        for deg in degrees:
+                            if deg[1] >= var:
+                                
+                                filtered.append(deg[0])
+                                
+                        
+                        
+                        filtered.append(res[len(res)-2])
+                        filtered.append(res[len(res)-1])
+                        
+                        return filtered
+
+#>>>Specify Input File              
+                
+MergeDetectedCmplxs("filtered_Predicted_all.txt")
+
